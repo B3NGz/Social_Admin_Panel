@@ -370,7 +370,7 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzyns4D4vYQmFZyIuUU1yXJjvgMtM10B7gihsyqqN9_KR9APjEUKXiUUc4rwyIakSfN/exec";
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhZ9_c-4vaxe-1bnVJ4PxHnlJINDn6WPzz4jPKJwa1n1WoNHomIX_hv-K0-pAGo82j/exec";
 
     let posts = [];
 
@@ -494,7 +494,11 @@
 
       sendToGoogleSheet(post);
       renderPosts();
-      showToast(`${post.id} updated to ${formatStatus(newStatus)}. Check Google Sheet.`);
+      showToast(`${post.id} updated to ${formatStatus(newStatus)}. Refreshing data...`);
+
+      setTimeout(() => {
+        loadPostsFromGoogleSheet();
+      }, 1800);
     }
 
     function sendToGoogleSheet(post) {
@@ -514,6 +518,9 @@
     }
 
     function loadPostsFromGoogleSheet() {
+      const oldScript = document.getElementById("jsonp-loader");
+      if (oldScript) oldScript.remove();
+
       window.receivePosts = function(data) {
         posts = cleanPosts(data);
         renderPosts();
@@ -521,6 +528,7 @@
       };
 
       const script = document.createElement("script");
+      script.id = "jsonp-loader";
       script.src = GOOGLE_SCRIPT_URL + "?callback=receivePosts&t=" + new Date().getTime();
       document.body.appendChild(script);
     }
