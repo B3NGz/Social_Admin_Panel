@@ -152,25 +152,10 @@
       white-space: nowrap;
     }
 
-    .PENDING {
-      background: #fff7ed;
-      color: #c2410c;
-    }
-
-    .APPROVED {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .REJECTED_CONTENT {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .RESCHEDULE_REQUESTED {
-      background: #dbeafe;
-      color: #1e40af;
-    }
+    .PENDING { background: #fff7ed; color: #c2410c; }
+    .APPROVED { background: #dcfce7; color: #166534; }
+    .REJECTED_CONTENT { background: #fee2e2; color: #991b1b; }
+    .RESCHEDULE_REQUESTED { background: #dbeafe; color: #1e40af; }
 
     .caption {
       background: #f8fafc;
@@ -180,6 +165,9 @@
       font-size: 14px;
       margin-bottom: 13px;
       min-height: 105px;
+      max-height: 145px;
+      overflow-y: auto;
+      white-space: pre-wrap;
     }
 
     .info {
@@ -190,8 +178,16 @@
       margin-bottom: 13px;
     }
 
-    .info b {
-      color: #111827;
+    .info b { color: #111827; }
+
+    .visual-box {
+      background: #f9fafb;
+      border: 1px dashed #cbd5e1;
+      padding: 10px;
+      border-radius: 12px;
+      max-height: 100px;
+      overflow-y: auto;
+      white-space: pre-wrap;
     }
 
     textarea, input[type="date"] {
@@ -223,7 +219,7 @@
 
     button {
       border: none;
-      padding: 12px 9px;
+      padding: 13px 9px;
       border-radius: 15px;
       cursor: pointer;
       font-weight: bold;
@@ -236,31 +232,16 @@
       filter: brightness(1.02);
     }
 
-    button:disabled,
-    textarea:disabled,
-    input:disabled {
+    button:disabled, textarea:disabled, input:disabled {
       opacity: 0.55;
       cursor: not-allowed;
     }
 
-    button:disabled:hover {
-      transform: none;
-    }
+    button:disabled:hover { transform: none; }
 
-    .approve {
-      background: #16a34a;
-      color: white;
-    }
-
-    .reject {
-      background: #ef4444;
-      color: white;
-    }
-
-    .resched {
-      background: #2563eb;
-      color: white;
-    }
+    .approve { background: #16a34a; color: white; }
+    .reject { background: #ef4444; color: white; }
+    .resched { background: #2563eb; color: white; }
 
     .toast {
       position: fixed;
@@ -295,21 +276,12 @@
     }
 
     @media (max-width: 520px) {
-      body {
-        padding: 13px;
-      }
-
-      .header {
-        padding: 22px;
-      }
-
-      .header h1 {
-        font-size: 24px;
-      }
-
-      .actions {
-        grid-template-columns: 1fr;
-      }
+      body { padding: 13px; }
+      .header { padding: 22px; }
+      .header h1 { font-size: 24px; }
+      .actions { grid-template-columns: 1fr; }
+      .post-card { padding: 16px; }
+      textarea { min-height: 90px; }
     }
   </style>
 </head>
@@ -321,26 +293,14 @@
     </div>
 
     <div class="stats">
-      <div class="stat-card">
-        <span>Pending Review</span>
-        <strong id="pendingCount">0</strong>
-      </div>
-      <div class="stat-card">
-        <span>Approved</span>
-        <strong id="approvedCount">0</strong>
-      </div>
-      <div class="stat-card">
-        <span>Rejected Content</span>
-        <strong id="rejectedCount">0</strong>
-      </div>
-      <div class="stat-card">
-        <span>Move Date Requests</span>
-        <strong id="reschedCount">0</strong>
-      </div>
+      <div class="stat-card"><span>Pending Review</span><strong id="pendingCount">0</strong></div>
+      <div class="stat-card"><span>Approved</span><strong id="approvedCount">0</strong></div>
+      <div class="stat-card"><span>Rejected Content</span><strong id="rejectedCount">0</strong></div>
+      <div class="stat-card"><span>Move Date Requests</span><strong id="reschedCount">0</strong></div>
     </div>
 
     <div class="toolbar">
-      <input id="searchInput" class="search" type="text" placeholder="Search caption, platform, or hashtag..." />
+      <input id="searchInput" class="search" type="text" placeholder="Search caption, platform, or topic..." />
       <select id="platformFilter" class="filter">
         <option value="ALL">All Platforms</option>
         <option value="Facebook">Facebook</option>
@@ -363,7 +323,7 @@
     </div>
 
     <div class="footer-note">
-      First working UI version. Next step: connect buttons to Google Sheet using Apps Script.
+      Connected to Google Sheet. After each action, data reloads automatically.
     </div>
   </div>
 
@@ -408,11 +368,10 @@
           emoji: post.emoji || platformEmoji(post.platform || post.Platform),
           caption: safeText(post.caption || post.Caption),
           scheduledDate: safeText(post.scheduledDate || post.ScheduledDateTime),
-          scheduledTime: safeText(post.scheduledTime || ""),
           visualIdea: safeText(post.visualIdea || post.ImageURL),
-          hashtags: safeText(post.hashtags || post.Topic),
+          topic: safeText(post.hashtags || post.Topic),
           status: normalizeStatus(post.status || post.Status),
-          comment: safeText(post.comment || ""),
+          comment: safeText(post.comment || post.AdminComment || ""),
           rescheduleDate: safeText(post.rescheduleDate || "")
         }));
     }
@@ -426,7 +385,7 @@
         const textMatch =
           post.caption.toLowerCase().includes(search) ||
           post.platform.toLowerCase().includes(search) ||
-          post.hashtags.toLowerCase().includes(search);
+          post.topic.toLowerCase().includes(search);
 
         const platformMatch = platform === "ALL" || post.platform.toLowerCase() === platform.toLowerCase();
         const statusMatch = status === "ALL" || post.status === status;
@@ -438,6 +397,7 @@
       emptyState.style.display = filteredPosts.length ? "none" : "block";
 
       filteredPosts.forEach((post, index) => {
+        const isLocked = post.status !== "PENDING";
         const card = document.createElement("div");
         card.className = "post-card";
 
@@ -452,17 +412,17 @@
           <div class="info">
             <div><b>Post ID:</b> ${escapeHtml(post.id)}</div>
             <div><b>Schedule:</b> ${formatDate(post.scheduledDate)}</div>
-            <div><b>Visual Idea:</b> ${escapeHtml(post.visualIdea)}</div>
-            <div><b>Topic:</b> ${escapeHtml(post.hashtags)}</div>
+            <div><b>Topic:</b> ${escapeHtml(post.topic)}</div>
+            <div><b>Visual Idea:</b><div class="visual-box">${escapeHtml(post.visualIdea)}</div></div>
           </div>
 
-          <textarea id="comment-${index}" placeholder="Admin comment here..." ${post.status !== "PENDING" ? "disabled" : ""}>${escapeHtml(post.comment)}</textarea>
-          <input id="date-${index}" type="date" value="${toInputDate(post.rescheduleDate)}" ${post.status !== "PENDING" ? "disabled" : ""} />
+          <textarea id="comment-${index}" placeholder="Admin comment here..." ${isLocked ? "disabled" : ""}>${escapeHtml(post.comment)}</textarea>
+          <input id="date-${index}" type="date" value="${toInputDate(post.rescheduleDate)}" ${isLocked ? "disabled" : ""} />
 
           <div class="actions">
-            <button class="approve" onclick="updatePost(${index}, 'APPROVED')" ${post.status !== "PENDING" ? "disabled" : ""}>✅ Approve</button>
-            <button class="reject" onclick="updatePost(${index}, 'REJECTED_CONTENT')" ${post.status !== "PENDING" ? "disabled" : ""}>❌ Reject</button>
-            <button class="resched" onclick="updatePost(${index}, 'RESCHEDULE_REQUESTED')" ${post.status !== "PENDING" ? "disabled" : ""}>📅 Move Date</button>
+            <button class="approve" onclick="updatePost(${index}, 'APPROVED')" ${isLocked ? "disabled" : ""}>✅ Approve</button>
+            <button class="reject" onclick="updatePost(${index}, 'REJECTED_CONTENT')" ${isLocked ? "disabled" : ""}>❌ Reject</button>
+            <button class="resched" onclick="updatePost(${index}, 'RESCHEDULE_REQUESTED')" ${isLocked ? "disabled" : ""}>📅 Move Date</button>
           </div>
         `;
 
@@ -494,11 +454,11 @@
 
       sendToGoogleSheet(post);
       renderPosts();
-      showToast(`${post.id} updated to ${formatStatus(newStatus)}. Refreshing data...`);
+      showToast(`${post.id} updated. Reloading Sheet data...`);
 
-      setTimeout(() => {
+      setTimeout(function() {
         loadPostsFromGoogleSheet();
-      }, 1800);
+      }, 2000);
     }
 
     function sendToGoogleSheet(post) {
@@ -529,7 +489,12 @@
 
       const script = document.createElement("script");
       script.id = "jsonp-loader";
-      script.src = GOOGLE_SCRIPT_URL + "?callback=receivePosts&t=" + new Date().getTime();
+      script.src = GOOGLE_SCRIPT_URL + "?callback=receivePosts&t=" + Date.now();
+
+      script.onerror = function() {
+        showToast("Failed to load Google Sheet data.");
+      };
+
       document.body.appendChild(script);
     }
 
@@ -583,7 +548,9 @@
       const toast = document.getElementById("toast");
       toast.textContent = message;
       toast.style.display = "block";
-      setTimeout(() => toast.style.display = "none", 2800);
+      setTimeout(function() {
+        toast.style.display = "none";
+      }, 3000);
     }
 
     searchInput.addEventListener("input", renderPosts);
@@ -591,8 +558,6 @@
     statusFilter.addEventListener("change", renderPosts);
 
     loadPostsFromGoogleSheet();
-
-    setInterval(loadPostsFromGoogleSheet, 10000);
   </script>
 </body>
 </html>
