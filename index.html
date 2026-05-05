@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ACE Content Approval Admin</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f3f7fb;
+      color: #1f2937;
+      padding: 22px;
+    }
+
+    .app {
+      max-width: 1180px;
+      margin: auto;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #4338ca, #06b6d4);
+      color: white;
+      padding: 28px;
+      border-radius: 26px;
+      margin-bottom: 22px;
+      box-shadow: 0 14px 34px rgba(67,56,202,0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::after {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 50%;
+      right: -50px;
+      top: -60px;
+    }
+
+    .header h1 {
+      font-size: 31px;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header p {
+      opacity: 0.95;
+      font-size: 15px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 18px;
+      border-radius: 20px;
+      box-shadow: 0 8px 22px rgba(15,23,42,0.07);
+      border: 1px solid #eef2f7;
+    }
+
+    .stat-card span {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .stat-card strong {
+      display: block;
+      font-size: 28px;
+      margin-top: 5px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .search, .filter {
+      border: none;
+      background: white;
+      padding: 13px 15px;
+      border-radius: 16px;
+      box-shadow: 0 5px 16px rgba(15,23,42,0.06);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .search {
+      flex: 1;
+      min-width: 230px;
+    }
+
+    .filter {
+      min-width: 170px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+      gap: 18px;
+    }
+
+    .post-card {
+      background: white;
+      border-radius: 24px;
+      padding: 19px;
+      box-shadow: 0 9px 25px rgba(15,23,42,0.08);
+      transition: 0.2s ease;
+      border: 1px solid #e5e7eb;
+    }
+
+    .post-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 36px rgba(15,23,42,0.12);
+    }
+
+    .post-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 13px;
+    }
+
+    .platform {
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .badge {
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .PENDING {
+      background: #fff7ed;
+      color: #c2410c;
+    }
+
+    .APPROVED {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .REJECTED_CONTENT {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .RESCHEDULE_REQUESTED {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .caption {
+      background: #f8fafc;
+      padding: 14px;
+      border-radius: 17px;
+      line-height: 1.5;
+      font-size: 14px;
+      margin-bottom: 13px;
+      min-height: 105px;
+    }
+
+    .info {
+      display: grid;
+      gap: 7px;
+      font-size: 13px;
+      color: #475569;
+      margin-bottom: 13px;
+    }
+
+    .info b {
+      color: #111827;
+    }
+
+    textarea, input[type="date"] {
+      width: 100%;
+      border: 1px solid #d0d5dd;
+      border-radius: 15px;
+      padding: 12px;
+      margin-bottom: 9px;
+      font-size: 14px;
+      outline: none;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 74px;
+      resize: vertical;
+    }
+
+    textarea:focus, input[type="date"]:focus {
+      border-color: #4338ca;
+      box-shadow: 0 0 0 3px rgba(67,56,202,0.08);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 9px;
+    }
+
+    button {
+      border: none;
+      padding: 12px 9px;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 13px;
+      transition: 0.18s ease;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+      filter: brightness(1.02);
+    }
+
+    button:disabled,
+    textarea:disabled,
+    input:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    button:disabled:hover {
+      transform: none;
+    }
+
+    .approve {
+      background: #16a34a;
+      color: white;
+    }
+
+    .reject {
+      background: #ef4444;
+      color: white;
+    }
+
+    .resched {
+      background: #2563eb;
+      color: white;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #111827;
+      color: white;
+      padding: 14px 18px;
+      border-radius: 16px;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.25);
+      display: none;
+      z-index: 100;
+      max-width: 330px;
+      font-size: 14px;
+    }
+
+    .empty {
+      text-align: center;
+      background: white;
+      border-radius: 22px;
+      padding: 36px;
+      color: #64748b;
+      box-shadow: 0 8px 22px rgba(15,23,42,0.07);
+      display: none;
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 28px;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 13px;
+      }
+
+      .header {
+        padding: 22px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>📣 ACE Content Approval Panel</h1>
+      <p>Review posts before publishing. Approve, reject content, or request a new posting date.</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <span>Pending Review</span>
+        <strong id="pendingCount">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>Approved</span>
+        <strong id="approvedCount">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>Rejected Content</span>
+        <strong id="rejectedCount">0</strong>
+      </div>
+      <div class="stat-card">
+        <span>Move Date Requests</span>
+        <strong id="reschedCount">0</strong>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <input id="searchInput" class="search" type="text" placeholder="Search caption, platform, or hashtag..." />
+      <select id="platformFilter" class="filter">
+        <option value="ALL">All Platforms</option>
+        <option value="Facebook">Facebook</option>
+        <option value="LinkedIn">LinkedIn</option>
+        <option value="TikTok">TikTok</option>
+      </select>
+      <select id="statusFilter" class="filter">
+        <option value="ALL">All Status</option>
+        <option value="PENDING" selected>Pending</option>
+        <option value="APPROVED">Approved</option>
+        <option value="REJECTED_CONTENT">Rejected Content</option>
+        <option value="RESCHEDULE_REQUESTED">Move Date Requested</option>
+      </select>
+    </div>
+
+    <div id="postGrid" class="grid"></div>
+
+    <div id="emptyState" class="empty">
+      🎉 No posts found for this filter.
+    </div>
+
+    <div class="footer-note">
+      First working UI version. Next step: connect buttons to Google Sheet using Apps Script.
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzyns4D4vYQmFZyIuUU1yXJjvgMtM10B7gihsyqqN9_KR9APjEUKXiUUc4rwyIakSfN/exec";
+
+    let posts = [];
+
+    const postGrid = document.getElementById("postGrid");
+    const emptyState = document.getElementById("emptyState");
+    const searchInput = document.getElementById("searchInput");
+    const platformFilter = document.getElementById("platformFilter");
+    const statusFilter = document.getElementById("statusFilter");
+
+    function safeText(value) {
+      return value === undefined || value === null ? "" : String(value);
+    }
+
+    function normalizeStatus(status) {
+      const s = safeText(status).trim().toUpperCase();
+      if (!s || s === "DRAFT") return "PENDING";
+      if (s === "POSTED") return "APPROVED";
+      return s;
+    }
+
+    function platformEmoji(platform) {
+      const p = safeText(platform).toLowerCase();
+      if (p.includes("facebook")) return "📘";
+      if (p.includes("linkedin")) return "💼";
+      if (p.includes("tiktok")) return "🎵";
+      return "📣";
+    }
+
+    function cleanPosts(rawPosts) {
+      return rawPosts
+        .filter(post => safeText(post.id || post.ID).trim() !== "")
+        .map(post => ({
+          id: safeText(post.id || post.ID),
+          platform: safeText(post.platform || post.Platform),
+          emoji: post.emoji || platformEmoji(post.platform || post.Platform),
+          caption: safeText(post.caption || post.Caption),
+          scheduledDate: safeText(post.scheduledDate || post.ScheduledDateTime),
+          scheduledTime: safeText(post.scheduledTime || ""),
+          visualIdea: safeText(post.visualIdea || post.ImageURL),
+          hashtags: safeText(post.hashtags || post.Topic),
+          status: normalizeStatus(post.status || post.Status),
+          comment: safeText(post.comment || ""),
+          rescheduleDate: safeText(post.rescheduleDate || "")
+        }));
+    }
+
+    function renderPosts() {
+      const search = safeText(searchInput.value).toLowerCase();
+      const platform = platformFilter.value;
+      const status = statusFilter.value;
+
+      const filteredPosts = posts.filter(post => {
+        const textMatch =
+          post.caption.toLowerCase().includes(search) ||
+          post.platform.toLowerCase().includes(search) ||
+          post.hashtags.toLowerCase().includes(search);
+
+        const platformMatch = platform === "ALL" || post.platform.toLowerCase() === platform.toLowerCase();
+        const statusMatch = status === "ALL" || post.status === status;
+
+        return textMatch && platformMatch && statusMatch;
+      });
+
+      postGrid.innerHTML = "";
+      emptyState.style.display = filteredPosts.length ? "none" : "block";
+
+      filteredPosts.forEach((post, index) => {
+        const card = document.createElement("div");
+        card.className = "post-card";
+
+        card.innerHTML = `
+          <div class="post-top">
+            <div class="platform">${post.emoji} ${escapeHtml(post.platform || "No Platform")}</div>
+            <div class="badge ${post.status}">${formatStatus(post.status)}</div>
+          </div>
+
+          <div class="caption">${escapeHtml(post.caption)}</div>
+
+          <div class="info">
+            <div><b>Post ID:</b> ${escapeHtml(post.id)}</div>
+            <div><b>Schedule:</b> ${formatDate(post.scheduledDate)}</div>
+            <div><b>Visual Idea:</b> ${escapeHtml(post.visualIdea)}</div>
+            <div><b>Topic:</b> ${escapeHtml(post.hashtags)}</div>
+          </div>
+
+          <textarea id="comment-${index}" placeholder="Admin comment here..." ${post.status !== "PENDING" ? "disabled" : ""}>${escapeHtml(post.comment)}</textarea>
+          <input id="date-${index}" type="date" value="${toInputDate(post.rescheduleDate)}" ${post.status !== "PENDING" ? "disabled" : ""} />
+
+          <div class="actions">
+            <button class="approve" onclick="updatePost(${index}, 'APPROVED')" ${post.status !== "PENDING" ? "disabled" : ""}>✅ Approve</button>
+            <button class="reject" onclick="updatePost(${index}, 'REJECTED_CONTENT')" ${post.status !== "PENDING" ? "disabled" : ""}>❌ Reject</button>
+            <button class="resched" onclick="updatePost(${index}, 'RESCHEDULE_REQUESTED')" ${post.status !== "PENDING" ? "disabled" : ""}>📅 Move Date</button>
+          </div>
+        `;
+
+        postGrid.appendChild(card);
+      });
+
+      updateCounts();
+    }
+
+    function updatePost(index, newStatus) {
+      const post = posts[index];
+      const comment = document.getElementById(`comment-${index}`).value.trim();
+      const newDate = document.getElementById(`date-${index}`).value;
+
+      if (newStatus === "REJECTED_CONTENT" && !comment) {
+        showToast("Please add a comment before rejecting the content.");
+        return;
+      }
+
+      if (newStatus === "RESCHEDULE_REQUESTED" && !newDate) {
+        showToast("Please select a new date before requesting to move the post.");
+        return;
+      }
+
+      post.status = newStatus;
+      post.comment = comment;
+      post.rescheduleDate = newStatus === "RESCHEDULE_REQUESTED" ? newDate : "";
+      post.reviewedAt = new Date().toISOString();
+
+      sendToGoogleSheet(post);
+      renderPosts();
+      showToast(`${post.id} updated to ${formatStatus(newStatus)}. Check Google Sheet.`);
+    }
+
+    function sendToGoogleSheet(post) {
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          id: post.id,
+          status: post.status,
+          comment: post.comment,
+          rescheduleDate: post.rescheduleDate,
+          reviewedAt: post.reviewedAt,
+          approved: post.status === "APPROVED" ? "YES" : "NO"
+        })
+      });
+    }
+
+    function loadPostsFromGoogleSheet() {
+      window.receivePosts = function(data) {
+        posts = cleanPosts(data);
+        renderPosts();
+        showToast("Loaded posts from Google Sheet.");
+      };
+
+      const script = document.createElement("script");
+      script.src = GOOGLE_SCRIPT_URL + "?callback=receivePosts&t=" + new Date().getTime();
+      document.body.appendChild(script);
+    }
+
+    function updateCounts() {
+      document.getElementById("pendingCount").textContent = posts.filter(p => p.status === "PENDING").length;
+      document.getElementById("approvedCount").textContent = posts.filter(p => p.status === "APPROVED").length;
+      document.getElementById("rejectedCount").textContent = posts.filter(p => p.status === "REJECTED_CONTENT").length;
+      document.getElementById("reschedCount").textContent = posts.filter(p => p.status === "RESCHEDULE_REQUESTED").length;
+    }
+
+    function formatStatus(status) {
+      const labels = {
+        PENDING: "PENDING",
+        APPROVED: "APPROVED",
+        REJECTED_CONTENT: "REJECTED CONTENT",
+        RESCHEDULE_REQUESTED: "MOVE DATE"
+      };
+      return labels[status] || status;
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return "No schedule";
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return safeText(dateString);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
+    function toInputDate(dateString) {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "";
+      return date.toISOString().split("T")[0];
+    }
+
+    function escapeHtml(text) {
+      return safeText(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.style.display = "block";
+      setTimeout(() => toast.style.display = "none", 2800);
+    }
+
+    searchInput.addEventListener("input", renderPosts);
+    platformFilter.addEventListener("change", renderPosts);
+    statusFilter.addEventListener("change", renderPosts);
+
+    loadPostsFromGoogleSheet();
+
+    setInterval(loadPostsFromGoogleSheet, 10000);
+  </script>
+</body>
+</html>
