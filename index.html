@@ -292,6 +292,10 @@
       <p>Review posts before publishing. Approve, reject content, or request a new posting date.</p>
     </div>
 
+    <button onclick="loadPostsFromGoogleSheet()" style="margin-bottom:15px; background:#111827; color:white; padding:12px 16px; border-radius:14px; border:none; font-weight:bold; cursor:pointer;">
+      🔄 Refresh Data
+    </button>
+
     <div class="stats">
       <div class="stat-card"><span>Pending Review</span><strong id="pendingCount">0</strong></div>
       <div class="stat-card"><span>Approved</span><strong id="approvedCount">0</strong></div>
@@ -323,7 +327,7 @@
     </div>
 
     <div class="footer-note">
-      Connected to Google Sheet. After each action, data reloads automatically.
+      Ace Admin Panel. After each action, data reloads automatically.
     </div>
   </div>
 
@@ -454,11 +458,7 @@
 
       sendToGoogleSheet(post);
       renderPosts();
-      showToast(`${post.id} updated. Reloading Sheet data...`);
-
-      setTimeout(function() {
-        loadPostsFromGoogleSheet();
-      }, 2000);
+      showToast(`${post.id} updated. Click Refresh Data to reload from Sheet.`);
     }
 
     function sendToGoogleSheet(post) {
