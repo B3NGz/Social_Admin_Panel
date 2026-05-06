@@ -128,19 +128,21 @@
 
     function cleanPosts(rawPosts) {
       return rawPosts
-        .filter(post => safeText(post.id || post.ID).trim() !== "")
-        .map(post => ({
-          id: safeText(post.id || post.ID),
-          platform: safeText(post.platform || post.Platform),
-          emoji: post.emoji || platformEmoji(post.platform || post.Platform),
-          caption: safeText(post.caption || post.Caption),
-          scheduledDate: safeText(post.scheduledDate || post.ScheduledDateTime),
-          visualIdea: safeText(post.visualIdea || post.ImageURL),
-          topic: safeText(post.hashtags || post.Topic),
-          status: normalizeStatus(post.status || post.Status),
-          comment: safeText(post.comment || post.AdminComment || ""),
-          rescheduleDate: safeText(post.rescheduleDate || "")
-        }));
+        .filter(function(post) { return safeText(post.id || post.ID).trim() !== ""; })
+        .map(function(post) {
+          return {
+            id: safeText(post.id || post.ID),
+            platform: safeText(post.platform || post.Platform),
+            emoji: post.emoji || platformEmoji(post.platform || post.Platform),
+            caption: safeText(post.caption || post.Caption),
+            scheduledDate: safeText(post.scheduledDate || post.ScheduledDateTime),
+            visualIdea: safeText(post.visualIdea || post.ImageURL),
+            topic: safeText(post.hashtags || post.Topic),
+            status: normalizeStatus(post.status || post.Status),
+            comment: safeText(post.comment || post.AdminComment || ""),
+            rescheduleDate: safeText(post.rescheduleDate || "")
+          };
+        });
     }
 
     function isImageSource(value) {
@@ -153,7 +155,7 @@
       const platform = platformFilter.value;
       const status = statusFilter.value;
 
-      const filteredPosts = posts.filter(post => {
+      const filteredPosts = posts.filter(function(post) {
         const textMatch = post.caption.toLowerCase().includes(search) || post.platform.toLowerCase().includes(search) || post.topic.toLowerCase().includes(search);
         const platformMatch = platform === "ALL" || post.platform.toLowerCase() === platform.toLowerCase();
         const statusMatch = status === "ALL" || post.status === status;
@@ -163,41 +165,40 @@
       postGrid.innerHTML = "";
       emptyState.style.display = filteredPosts.length ? "none" : "block";
 
-      filteredPosts.forEach((post, index) => {
+      filteredPosts.forEach(function(post, index) {
         const isLocked = post.status !== "PENDING";
         const card = document.createElement("div");
         card.className = "post-card";
 
         const imageHtml = isImageSource(post.visualIdea)
-          ? `<img class="image-preview" src="${escapeAttribute(post.visualIdea)}" onclick="openImageModal(this.src)" onerror="this.style.display='none'" alt="Image preview">`
-          : "";
+          ? '<img class="image-preview" src="' + escapeAttribute(post.visualIdea) + '" onclick="openImageModal(this.src)" onerror="this.style.display=\'none\'" alt="Image preview">'
+          : '';
 
-        card.innerHTML = `
-          <div class="post-top">
-            <div class="platform">${post.emoji} ${escapeHtml(post.platform || "No Platform")}</div>
-            <div class="badge ${post.status}">${formatStatus(post.status)}</div>
-          </div>
+        const viewPhotoButton = isImageSource(post.visualIdea)
+          ? '<button class="viewphoto" onclick="viewPhoto(' + index + ')">🖼 View Photo</button>'
+          : '<button class="viewphoto" disabled>🖼 No Photo</button>';
 
-          ${imageHtml}
-          <div class="caption">${escapeHtml(post.caption)}</div>
-
-          <div class="info">
-            <div><b>Post ID:</b> ${escapeHtml(post.id)}</div>
-            <div><b>Schedule:</b> ${formatDate(post.scheduledDate)}</div>
-            <div><b>Topic:</b> ${escapeHtml(post.topic)}</div>
-            <div><b>${isImageSource(post.visualIdea) ? "Image URL:" : "Visual Idea:"}</b><div class="visual-box">${escapeHtml(post.visualIdea)}</div></div>
-          </div>
-
-          <textarea id="comment-${index}" placeholder="Admin comment here..." ${isLocked ? "disabled" : ""}>${escapeHtml(post.comment)}</textarea>
-          <input id="date-${index}" type="date" value="${toInputDate(post.rescheduleDate)}" ${isLocked ? "disabled" : ""}>
-
-          <div class="actions">
-            <button class="approve" onclick="updatePost(${index}, 'APPROVED')" ${isLocked ? "disabled" : ""}>✅ Approve</button>
-            <button class="reject" onclick="updatePost(${index}, 'REJECTED_CONTENT')" ${isLocked ? "disabled" : ""}>❌ Reject</button>
-            <button class="resched" onclick="updatePost(${index}, 'RESCHEDULE_REQUESTED')" ${isLocked ? "disabled" : ""}>📅 Move Date</button>
-            ${isImageSource(post.visualIdea) ? `<button class="viewphoto" onclick="viewPhoto(${index})">🖼 View Photo</button>` : `<button class="viewphoto" disabled>🖼 No Photo</button>`}
-          </div>
-        `;
+        card.innerHTML =
+          '<div class="post-top">' +
+            '<div class="platform">' + post.emoji + ' ' + escapeHtml(post.platform || 'No Platform') + '</div>' +
+            '<div class="badge ' + post.status + '">' + formatStatus(post.status) + '</div>' +
+          '</div>' +
+          imageHtml +
+          '<div class="caption">' + escapeHtml(post.caption) + '</div>' +
+          '<div class="info">' +
+            '<div><b>Post ID:</b> ' + escapeHtml(post.id) + '</div>' +
+            '<div><b>Schedule:</b> ' + formatDate(post.scheduledDate) + '</div>' +
+            '<div><b>Topic:</b> ' + escapeHtml(post.topic) + '</div>' +
+            '<div><b>' + (isImageSource(post.visualIdea) ? 'Image URL:' : 'Visual Idea:') + '</b><div class="visual-box">' + escapeHtml(post.visualIdea) + '</div></div>' +
+          '</div>' +
+          '<textarea id="comment-' + index + '" placeholder="Admin comment here..." ' + (isLocked ? 'disabled' : '') + '>' + escapeHtml(post.comment) + '</textarea>' +
+          '<input id="date-' + index + '" type="date" value="' + toInputDate(post.rescheduleDate) + '" ' + (isLocked ? 'disabled' : '') + '>' +
+          '<div class="actions">' +
+            '<button class="approve" onclick="updatePost(' + index + ', \'APPROVED\')" ' + (isLocked ? 'disabled' : '') + '>✅ Approve</button>' +
+            '<button class="reject" onclick="updatePost(' + index + ', \'REJECTED_CONTENT\')" ' + (isLocked ? 'disabled' : '') + '>❌ Reject</button>' +
+            '<button class="resched" onclick="updatePost(' + index + ', \'RESCHEDULE_REQUESTED\')" ' + (isLocked ? 'disabled' : '') + '>📅 Move Date</button>' +
+            viewPhotoButton +
+          '</div>';
 
         postGrid.appendChild(card);
       });
@@ -207,128 +208,134 @@
 
     function updatePost(index, newStatus) {
       const post = posts[index];
-      const comment = document.getElementById(`comment-${index}`).value.trim();
-      const newDate = document.getElementById(`date-${index}`).value;
+      const comment = document.getElementById('comment-' + index).value.trim();
+      const newDate = document.getElementById('date-' + index).value;
 
-      if (newStatus === "REJECTED_CONTENT" && !comment) { showToast("Please add a comment before rejecting."); return; }
-      if (newStatus === "RESCHEDULE_REQUESTED" && !newDate) { showToast("Please select a new date first."); return; }
+      if (newStatus === 'REJECTED_CONTENT' && !comment) { showToast('Please add a comment before rejecting.'); return; }
+      if (newStatus === 'RESCHEDULE_REQUESTED' && !newDate) { showToast('Please select a new date first.'); return; }
 
       post.status = newStatus;
       post.comment = comment;
-      post.rescheduleDate = newStatus === "RESCHEDULE_REQUESTED" ? newDate : "";
+      post.rescheduleDate = newStatus === 'RESCHEDULE_REQUESTED' ? newDate : '';
       post.reviewedAt = new Date().toISOString();
 
       sendToGoogleSheet(post);
       renderPosts();
-      showToast(`${post.id} updated. Click Refresh Data to confirm Sheet update.`);
+      showToast(post.id + ' updated. Click Refresh Data to confirm Sheet update.');
     }
 
     function sendToGoogleSheet(post) {
       fetch(GOOGLE_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           id: post.id,
           status: post.status,
           comment: post.comment,
           rescheduleDate: post.rescheduleDate,
           reviewedAt: post.reviewedAt,
-          approved: post.status === "APPROVED" ? "YES" : "NO"
+          approved: post.status === 'APPROVED' ? 'YES' : 'NO'
         })
       });
     }
 
     function loadPostsFromGoogleSheet() {
-      const oldScript = document.getElementById("jsonp-loader");
+      const oldScript = document.getElementById('jsonp-loader');
       if (oldScript) oldScript.remove();
 
       window.receivePosts = function(data) {
         posts = cleanPosts(data);
         renderPosts();
-        showToast("Loaded posts from Google Sheet.");
+        showToast('Loaded posts from Google Sheet.');
       };
 
-      const script = document.createElement("script");
-      script.id = "jsonp-loader";
-      script.src = GOOGLE_SCRIPT_URL + "?callback=receivePosts&t=" + Date.now();
-      script.onerror = function() { showToast("Failed to load Google Sheet data."); };
+      const script = document.createElement('script');
+      script.id = 'jsonp-loader';
+      script.src = GOOGLE_SCRIPT_URL + '?callback=receivePosts&t=' + Date.now();
+      script.onerror = function() { showToast('Failed to load Google Sheet data.'); };
       document.body.appendChild(script);
     }
 
     function updateCounts() {
-      document.getElementById("pendingCount").textContent = posts.filter(p => p.status === "PENDING").length;
-      document.getElementById("approvedCount").textContent = posts.filter(p => p.status === "APPROVED").length;
-      document.getElementById("rejectedCount").textContent = posts.filter(p => p.status === "REJECTED_CONTENT").length;
-      document.getElementById("reschedCount").textContent = posts.filter(p => p.status === "RESCHEDULE_REQUESTED").length;
+      document.getElementById('pendingCount').textContent = posts.filter(function(p) { return p.status === 'PENDING'; }).length;
+      document.getElementById('approvedCount').textContent = posts.filter(function(p) { return p.status === 'APPROVED'; }).length;
+      document.getElementById('rejectedCount').textContent = posts.filter(function(p) { return p.status === 'REJECTED_CONTENT'; }).length;
+      document.getElementById('reschedCount').textContent = posts.filter(function(p) { return p.status === 'RESCHEDULE_REQUESTED'; }).length;
     }
 
     function formatStatus(status) {
-      const labels = { PENDING: "PENDING", APPROVED: "APPROVED", REJECTED_CONTENT: "REJECTED CONTENT", RESCHEDULE_REQUESTED: "MOVE DATE" };
+      const labels = { PENDING: 'PENDING', APPROVED: 'APPROVED', REJECTED_CONTENT: 'REJECTED CONTENT', RESCHEDULE_REQUESTED: 'MOVE DATE' };
       return labels[status] || status;
     }
 
     function formatDate(dateString) {
-      if (!dateString) return "No schedule";
+      if (!dateString) return 'No schedule';
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return safeText(dateString);
-      return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     }
 
     function toInputDate(dateString) {
-      if (!dateString) return "";
+      if (!dateString) return '';
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "";
-      return date.toISOString().split("T")[0];
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
     }
 
     function viewPhoto(index) {
-      const post = posts[index];
-      if (!post || !isImageSource(post.visualIdea)) {
-        showToast("No photo available for this post.");
-        return;
-      }
-      openImageModal(post.visualIdea);
+  const post = posts[index];
+
+  if (!post || !isImageSource(post.visualIdea)) {
+    showToast('No photo available for this post.');
+    return;
+  }
+
+  let cleanUrl = String(post.visualIdea)
+    .trim()
+    .replace(/\s+/g, '');
+
+  // Convert Google Drive links
+  if (cleanUrl.includes("drive.google.com")) {
+
+    const match = cleanUrl.match(/id=([^&]+)/);
+
+    if (match && match[1]) {
+      cleanUrl = "https://drive.google.com/thumbnail?id=" + match[1] + "&sz=w2000";
     }
+  }
+
+  openImageModal(cleanUrl);
+}
 
     function openImageModal(src) {
-      document.getElementById("modalImage").src = src;
-      document.getElementById("imageModal").style.display = "flex";
+      document.getElementById('modalImage').src = src;
+      document.getElementById('imageModal').style.display = 'flex';
     }
 
     function closeImageModal() {
-      document.getElementById("imageModal").style.display = "none";
-      document.getElementById("modalImage").src = "";
+      document.getElementById('imageModal').style.display = 'none';
+      document.getElementById('modalImage').src = '';
     }
 
-    document.addEventListener("keydown", function(event) { if (event.key === "Escape") closeImageModal(); });
+    document.addEventListener('keydown', function(event) { if (event.key === 'Escape') closeImageModal(); });
 
     function escapeHtml(text) {
-      return safeText(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
+      return safeText(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
     function escapeAttribute(text) { return escapeHtml(text); }
 
-    function escapeJs(text) {
-      return safeText(text)
-        .replace(/\/g, "\\")
-        .replace(/'/g, "\'")
-        .replace(/
-/g, "\n")
-        .replace(/
-/g, "");
-    }
-
     function showToast(message) {
-      const toast = document.getElementById("toast");
+      const toast = document.getElementById('toast');
       toast.textContent = message;
-      toast.style.display = "block";
-      setTimeout(function() { toast.style.display = "none"; }, 3000);
+      toast.style.display = 'block';
+      setTimeout(function() { toast.style.display = 'none'; }, 3000);
     }
 
-    searchInput.addEventListener("input", renderPosts);
-    platformFilter.addEventListener("change", renderPosts);
-    statusFilter.addEventListener("change", renderPosts);
+    searchInput.addEventListener('input', renderPosts);
+    platformFilter.addEventListener('change', renderPosts);
+    statusFilter.addEventListener('change', renderPosts);
 
     loadPostsFromGoogleSheet();
   </script>
