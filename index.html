@@ -464,7 +464,7 @@
             <div class="badge ${post.status}">${formatStatus(post.status)}</div>
           </div>
 
-          ${isImageSource(post.visualIdea) ? `<img class="image-preview" src="${escapeAttribute(post.visualIdea)}" onclick="openImageModal('${escapeJs(post.visualIdea)}')" alt="Post image preview" />` : ""}
+          ${isImageSource(post.visualIdea) ? `<img class="image-preview" src="${escapeAttribute(post.visualIdea)}" onclick="openImageModal('${escapeJs(post.visualIdea)}')" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="Post image preview" />` : ""}
 
           <div class="caption">${escapeHtml(post.caption)}</div>
 
@@ -594,12 +594,9 @@
       const text = safeText(value).trim();
       if (!text) return false;
 
-      return (
-        text.startsWith("data:image/") ||
-        /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i.test(text) ||
-        /^https?:\/\/drive\.google\.com/i.test(text) ||
-        /^https?:\/\/lh3\.googleusercontent\.com/i.test(text)
-      );
+      // Show thumbnail for any direct URL or base64 image.
+      // If the image cannot load, onerror will hide it automatically.
+      return text.startsWith("http://") || text.startsWith("https://") || text.startsWith("data:image/");
     }
 
     function openImageModal(src) {
