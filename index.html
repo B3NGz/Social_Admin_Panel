@@ -195,7 +195,7 @@
             <button class="approve" onclick="updatePost(${index}, 'APPROVED')" ${isLocked ? "disabled" : ""}>✅ Approve</button>
             <button class="reject" onclick="updatePost(${index}, 'REJECTED_CONTENT')" ${isLocked ? "disabled" : ""}>❌ Reject</button>
             <button class="resched" onclick="updatePost(${index}, 'RESCHEDULE_REQUESTED')" ${isLocked ? "disabled" : ""}>📅 Move Date</button>
-            ${isImageSource(post.visualIdea) ? `<button class="viewphoto" onclick="openImageModal('${escapeJs(post.visualIdea)}')">🖼 View Photo</button>` : `<button class="viewphoto" disabled>🖼 No Photo</button>`}
+            ${isImageSource(post.visualIdea) ? `<button class="viewphoto" onclick="viewPhoto(${index})">🖼 View Photo</button>` : `<button class="viewphoto" disabled>🖼 No Photo</button>`}
           </div>
         `;
 
@@ -280,6 +280,15 @@
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return "";
       return date.toISOString().split("T")[0];
+    }
+
+    function viewPhoto(index) {
+      const post = posts[index];
+      if (!post || !isImageSource(post.visualIdea)) {
+        showToast("No photo available for this post.");
+        return;
+      }
+      openImageModal(post.visualIdea);
     }
 
     function openImageModal(src) {
